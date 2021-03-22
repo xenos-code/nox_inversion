@@ -51,9 +51,7 @@ def beta_monthly(start_date, end_date, lok=0, hik=20, ltng=False, **kwargs):
     '''
     global dtz
     global dpop
-    #print(kwargs)
-    #print(type(kwargs))
-    # start date is datetime date object
+
     basedir='/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/'
     
     tzf = '/work/ROMO/gis_rasters/tz_world/ioapi/tz_world_hours_HEMIS.IOAPI.nc'
@@ -91,36 +89,18 @@ def beta_monthly(start_date, end_date, lok=0, hik=20, ltng=False, **kwargs):
         emisbase = kwargs.get('emisbase',None)
         emisperturb=kwargs.get('emisperturb',None)
 
-        #epathsbase = {
-        #    'anth': basedir+'input_2018_hemi/emis/'+emisbase+'/repemis_mole_all.'+yyyymmdd+'.nc',
-        #    'soil': basedir+'input_2018_hemi/emis/2018/CAMS-108NHEMI2-SOIL_Glb_0.5x0.5_soil_nox_v1.1_2015-07-15.nc',
-        #    'ship': basedir+'input_2018_hemi/emis/2018/repemis_mole_all_shipping.'+yyyymmdd+'.nc',
-        #    'fire': basedir+'input_2018_hemi/emis/2018/emis_mole_3d_finnfires_'+yyyymmdd+'_HEMI_108k.ncf',
-        #    'lnox': basedir+'input_2018_hemi/emis/2018/emis_mole_lightning_20170711_HEMI_108k_cmaq_cb6_2017ga_hemi_cb6_17jh.ncf'
-        #}
-        #epathsperturb = epathsbase.copy()
-        #epathsperturb['anth'] = basedir+'input_2018_hemi/emis/'+emisperturb+'/repemis_mole_all.'+yyyymmdd+'.nc'
-    
         emisbasef = f'noxemis_{emisbase}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
         emisperturbf = f'noxemis_{emisperturb}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
         
         # if nox emis file doesn't exist, ERROR
         if os.path.isfile(emisbasef):
-            #noxemisbased = xr.open_dataset(emisbasef)
-            #noxemisbase = noxemisbased.isel(TSTEP=slice(d*25, (d+1)*25-1)) # pick out 'today'
             noxemisbase = open_emis(emisbasef, start_date+timedelta(days=d), start_date+timedelta(days=d))
         else:
-            #noxemisbase = emissions_sums(epathsbase)
-            #noxemisbaseout.append(noxemisbase)
             sys.exit(f'File {emisbasef} is missing, it is required, create with make_emissions_file.py!')
             
         if os.path.isfile(emisperturbf):
-            #noxemisperturbd = xr.open_dataset(emisperturbf)
-            #noxemisperturb = noxemisperturbd.isel(TSTEP=slice(d*25, (d+1)*25-1)) # pick out 'today'
             noxemisperturb = open_emis(emisperturbf, start_date+timedelta(days=d), start_date+timedelta(days=d))
         else:
-            #noxemisperturb = emissions_sums(epathsperturb)
-            #noxemisperturbout.append(noxemisperturb)
             sys.exit(f'File {emisperturbf} is missing, it is required, create with make_emissions_file.py!')
     
         anthonly = kwargs.get('anthonly',False)
@@ -138,15 +118,10 @@ def beta_monthly(start_date, end_date, lok=0, hik=20, ltng=False, **kwargs):
                       **kwargs)
                     )
 
-    ## Save file of noxemis to use later
-    #if not os.path.isfile(emisbasef): # only if it doesn't already exist
-    #    (xr.concat([xr.merge([d]) for d in noxemisbaseout], dim='TSTEP')).to_netcdf(emisbasef)
-    #if not os.path.isfile(emisperturbf): # only if it doesn't already exist
-    #    (xr.concat([xr.merge([d]) for d in noxemisperturbout], dim='TSTEP')).to_netcdf(emisperturbf)
-
     daily_betas = np.ma.masked_array(betas)
     beta = daily_betas.mean(0) # data array
     return beta
+
 
 def beta_1day(concd,
               cutd,
@@ -158,9 +133,6 @@ def beta_1day(concd,
               ltng=False,
               anthonly=False,
               **kwargs):
-    #global dtz
-    #global dpop
-    # main function
 
     dmet2d=xr.open_dataset(metcro2df)
     
@@ -187,22 +159,13 @@ def beta_1day(concd,
             ('Clear Sky', isclear)
         ]
         
-        #cutfrac = kwargs.get('cutfrac',None)
-        #if cutfrac is None:
-        #    # calculate the cutfrac. Should be identical for all hours, use day avg.
-        #    eb = noxemisbase.mean(dim='TSTEP').sum(dim='COL').squeeze().values # now has dims ROW, COL
-        #    ep = noxemisperturb.mean(dim='TSTEP').sum(dim='COL').squeeze().values
-        #    cutfrac = (ep - eb) / eb # ROW*COL array of emis perturbation
         isvalid = ismajorityant & isoverpass & isurban & isclear
     
-    #kwargs['noxemis']=noxemis
-
     return calc_beta(base=concd,
                      perturb=cutd,
                      #dmet2d=dmet2d,
                      noxemisbase=noxemisbase,
                      noxemisperturb=noxemisperturb,
-                     #cutfrac=cutfrac,
                      antfrac=frac,
                      isvalid=isvalid,
                      lok=lok,
@@ -213,10 +176,10 @@ def beta_1day(concd,
 
 
 def calc_beta(base, perturb, noxemisbase, noxemisperturb, antfrac, isvalid, lok, hik, anthonly=False, **kwargs):
-    # beta = dE/E * VCD/dVCD
-    #basevcd = tovcd_partial(base, dmet2d, dconc, lok=lok, hik=hik).where(isvalid)
+    '''
+    beta = dE/E * VCD/dVCD
+    '''
     basevcd = base.NO2_VCD.where(isvalid).load()
-    #cutvcd = tovcd_partial(perturb, dmet2d, dconc, lok=lok, hik=hik).where(isvalid)
     cutvcd = perturb.NO2_VCD.where(isvalid).load()
     
     hourly = kwargs.get('hourly', True)
@@ -329,9 +292,11 @@ def open_emis(path, first_date, last_date):
 
 
 def overpass_filter_old(dconc, dtz):
-    # Calculate hour of day in local time
-    # use to estimate overpass filter
-    # TROPOMI equatorial overpass time is 1:30
+    '''
+    Calculate hour of day in local time
+    use to estimate overpass filter
+    TROPOMI equatorial overpass time is 1:30
+    '''
     utct = dconc.TSTEP
     utcoff=xr.zeros_like(dtz.UTCOFFSET)
     utcoff.values=dtz.UTCOFFSET.values.view('<i8')/3.6e12 # because xarray interprets units as time units
@@ -353,6 +318,7 @@ def get_lon():
         gridcro2d = xr.open_dataset(gridcro2df[0])#, combine='nested', concat_dim='TSTEP')
         lon = gridcro2d.LON[0,0,:,:].load()
 
+
 def overpass_filter(dconc):
     '''
     Calculate hour of day in local time
@@ -373,6 +339,7 @@ def overpass_filter(dconc):
     isoverpass = (lsth >= 13) & (lsth <= 14) #TROPOMI
     return isoverpass
 
+
 def emissions_sums(epaths):
     # Calculate the 2d emissions in each cell
     emisds = {ename: xr.open_dataset(efile) for ename, efile in epaths.items()}
@@ -388,6 +355,7 @@ def emissions_sums(epaths):
             noxemis[ename] += d.HONO.isel(TSTEP=slice(0,24)).values
         noxemis[ename] = noxemis[ename].sum(dim='LAY',keepdims=True)
     return noxemis
+
 
 def antnox_filter(noxemis, uselnox):
     '''
@@ -405,30 +373,29 @@ def antnox_filter(noxemis, uselnox):
         antfrac = noxemis['anth']/noxtotl
     return antfrac, (antfrac > 0.5).values
 
+
 def lnox_frac(noxemis):
-    # calc fraction of lnox that is total
-    # dont fileter out where lnox fraction small, because
-    # ultimately those are the regions
-    # we are interested in
+    '''
+    calc fraction of lnox that is total
+    dont fileter out where lnox fraction small, because
+    ultimately those are the regions
+    we are interested in
+    '''
     noxtot = sum(a for ename,a in noxemis.items())
     lfrac = noxemis['lnox']/noxtot
     return lfrac
+
 
 def urban_filter(dpop):
     # filter for urban
     ppkm2 = dpop.DENS[3:4] # 2015, TSTEP, LAY, ROW, COL
     return (ppkm2 > 15).values
 
+
 def cloud_filter(dmet2d):
     # Filter for model cloud cover
     cfrac = dmet2d.CFRAC.isel(TSTEP=slice(0,24))
     return (cfrac < 0.3).values
-
-
-# Next steps
-# Calculate monthly for TROPOMI
-# loop over days to calc daily betas
-# Average daily betas, be sure to properly account for cells which are valid on some days and not on others
 
 
 def tovcd(x, dmet2d, dconc):
@@ -443,6 +410,7 @@ def tovcd(x, dmet2d, dconc):
     )
     return (x * dp).sum(dim='LAY', keepdims=True) * hPa_to_du * 2.69e16
 
+
 def tovcd_partial(x, dmet2d, dconc, lok, hik):
     '''
     x = array of 3D NO2
@@ -453,23 +421,16 @@ def tovcd_partial(x, dmet2d, dconc, lok, hik):
     '''
     # Calc VCD with surface file only
     x = x[:,lok:hik,:,:]
-    #print(np.shape(x))
     pedges = (
         (dmet2d.PRSFC.values - dconc.VGTOP) *
         dconc.VGLVLS[None,:,None,None] + dconc.VGTOP
     )
     pedges = pedges[:,lok:hik+1,:,:]
-    #print(np.shape(pedges))
     dp = -np.diff(pedges, axis=1) / 100
     hPa_to_du = (
         10 * 1.3807e-23 * 6.022e23 / 0.02894 * 273.15 / 9.80665 / 101325.
     )
     return (x * dp).sum(dim='LAY', keepdims=True) * hPa_to_du * 2.69e16
-
-
-
-
-
 
 
 # Plotting stuff below here
