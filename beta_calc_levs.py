@@ -254,9 +254,9 @@ def calc_beta(base, perturb, noxemisbase, noxemisperturb, antfrac, isvalid, lok,
 
     # if min/mx limits given, apply here
     if min_limit:
-        beta[beta<min_limit] = min_limit
+        beta.values[beta.values<min_limit] = min_limit
     if max_limit:
-        beta[beta<max_limit] = max_limit
+        beta.values[beta.values<max_limit] = max_limit
  
     return beta.to_masked_array()
 
