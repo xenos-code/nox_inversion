@@ -5,6 +5,7 @@ import numpy as np
 import sys
 from glob import glob
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 from datetime import date, timedelta
 import os.path
 
@@ -447,7 +448,11 @@ def tovcd_partial(x, dmet2d, dconc, lok, hik):
 # Plotting stuff below here
 def plot_hemi(a, title='hemi', cmap='viridis', cbar=True, save=False, **kwargs):
     plt.close('all')
-    plt.pcolormesh(a)
+    lognorm = kwargs.get('lognorm',False)
+    if lognorm:
+        plt.pcolormesh(a, norm=colors.LogNorm()) # set vmin, vmax manually
+    else:
+        plt.pcolormesh(a)
     cno.draw()
     if cbar:
         cb = plt.colorbar()
