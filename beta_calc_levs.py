@@ -48,6 +48,8 @@ def beta_monthly(start_date, end_date, lok=0, hik=20, ltng=False, **kwargs):
                           relative emissions change array used for beta
         anthonly=False
         debug=False: if True, save out some netcdfs for debugging
+        min_limit=None (float): optional lower limit for beta. Applied at daily level
+        max_limit=None (float): optional upper limit for beta. Applied at daily level
     '''
     global dtz
     global dpop
@@ -193,6 +195,9 @@ def calc_beta(base, perturb, noxemisbase, noxemisperturb, antfrac, isvalid, lok,
     cutfracfile = kwargs.get('cutfracfile',None)
     cutfrac = kwargs.get('cutfrac',None)
 
+    min_limit = kwargs.get('min_limit', None)
+    max_limit = kwargs.get('max_limit', None)
+
     if cutfrac is None:
         if cutfracfile is None:
             # calculate the cutfrac. Should be identical for all hours, use day avg.
@@ -245,6 +250,12 @@ def calc_beta(base, perturb, noxemisbase, noxemisperturb, antfrac, isvalid, lok,
                 (xr.DataArray(cutfrac)).to_netcdf(f'./outputs_debug/cutfrac-2018-7-{d}.nc')
             del(tmp)
             beta = daily_beta()
+
+    # if min/mx limits given, apply here
+    if min_limit:
+        beta[beta<min_limit] = min_limit
+    if max_limit:
+        beta[beta<max_limit] = max_limit
  
     return beta.to_masked_array()
 
