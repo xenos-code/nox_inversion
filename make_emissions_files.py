@@ -4,17 +4,21 @@ import sys
 sys.path.insert(0, '.')
 from beta_calc_levs import emissions_sums
 from datetime import date, timedelta
+import xarray as xr
 
 #OPTIONS
 start_date = date(2018,7,1) # first day to get emissions
 end_date = date(2018,7,31) # last day to get emissions
 emisdir = '2018' # emissions dir name. not full path.
 #emisdir = 'antbe0_posterior'
+#emisdir = 'antbe2_posterior'
+#emisdir = 'antbe3_posterior'
 
 
 #SCRIPT -- shouldn't have to change anything below here --
 basedir='/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/'
 
+noxemisout = []
 for d in range(int( (end_date-start_date).days )+1):
     yyyymmdd = (start_date + timedelta(d)).strftime("%Y%m%d")
     print(f'Getting date: {yyyymmdd}', flush=True)
@@ -29,8 +33,8 @@ for d in range(int( (end_date-start_date).days )+1):
     noxemis = emissions_sums(epathsbase)
     noxemisout.append(noxemis)
 
-emisbasef = f'noxemis_{emisdir}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
-(xr.concat([xr.merge([earray]) for earray in noxemisbaseout], dim='TSTEP')).to_netcdf(emisbasef)
+emisbasef = f'../noxemis_{emisdir}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
+(xr.concat([xr.merge([earray]) for earray in noxemisout], dim='TSTEP')).to_netcdf(emisbasef)
 
 
 

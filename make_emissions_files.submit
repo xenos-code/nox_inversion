@@ -1,0 +1,14 @@
+#!/bin/bash
+#SBATCH -p largemem
+#SBATCH -t 6:00:00
+#SBATCH -n 1
+#SBATCH --gid=mod3eval
+#SBATCH --account=mod3eval
+#SBATCH --export=NONE
+#SBATCH -J calc_emis2
+#SBATCH -o slurm.%j.out
+#SBATCH -e slurm.%j.out
+ 
+. ~/.bashrc
+conda activate /home/jeast/envs/py38
+python make_emissions_files.py

@@ -26,11 +26,3 @@ beta.submit
 
 make_intermediate_files.submit
 - script to submit intermediate file maker to SLURM on ATMOS
-
-
-## Steps for inversion
-1. make intermediate files (edit file in this dir, submit to SLURM)
-2. make emissions files (edit 'emisdir' in make_emissions_files.py in this dir, submit to SLURM)
-3. edit do_inversion.py in case dir and submit SLURM
-4. edit scale_emis.submit in case dir and submit to SLURM 
-

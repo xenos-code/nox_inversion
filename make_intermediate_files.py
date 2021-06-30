@@ -92,4 +92,13 @@ def save_vcds(dirname, toplev, outname):
 #save_vcds(dirname='antbe0', toplev=44, outname='vcd_partial_44L_antbe0_201806.nc')
 
 #save_vcds(dirname='std2', toplev=20, outname='vcd_partial_20L_std2_201807.nc')
-save_vcds(dirname='antbe1', toplev=20, outname='vcd_partial_20L_antbe1_201807.nc')
+#save_vcds(dirname='antbe1', toplev=20, outname='vcd_partial_20L_antbe1_201807.nc')
+
+#save_vcds(dirname='std3', toplev=20, outname='../vcd_partial_20L_std3_201807.nc')
+#save_vcds(dirname='antbe2', toplev=20, outname='../vcd_partial_20L_antbe2_201807.nc')
+
+#save_vcds(dirname='std4', toplev=20, outname='../vcd_partial_20L_std4_201807.nc')
+#save_vcds(dirname='antbe3', toplev=20, outname='../vcd_partial_20L_antbe3_201807.nc')
+
+save_vcds(dirname='std5', toplev=20, outname='../vcd_partial_20L_std5_201807.nc')
+save_vcds(dirname='antbe4', toplev=20, outname='../vcd_partial_20L_antbe4_201807.nc')
