@@ -31,6 +31,10 @@ make_intermediate_files.submit
 ## Steps for inversion
 1. make intermediate files (edit file in this dir, submit to SLURM)
 2. make emissions files (edit 'emisdir' in make_emissions_files.py in this dir, submit to SLURM)
-3. edit do_inversion.py in case dir and submit SLURM
-4. edit scale_emis.submit in case dir and submit to SLURM 
+3. link previous iter analysis file to case dir
+4. link previous 2 emis files to case dir
+5. edit do_inversion.py in case dir and submit SLURM
+6. edit scale_emis.submit in case dir and submit to SLURM 
+7. Link emissions files (linking scripts in {emisbasedir}/antbeN_posterior/.
+8. Run next iteration
 
