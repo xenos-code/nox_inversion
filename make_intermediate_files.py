@@ -5,6 +5,10 @@ sys.path.insert(0, '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/scripts/hemi'
 from beta_calc_levs import *
 from datetime import date
 
+indirname = sys.argv[1]
+intoplev  = int(sys.argv[2])
+inoutname = sys.argv[3]
+
 basedir = '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/'
 
 metcro2df = glob(basedir+'input_2018_hemi/mcip/METCRO2D.108NHEMI2.44L.1807??')
@@ -42,6 +46,8 @@ def save_vcds(dirname, toplev, outname):
 
     # save file
     dout.to_netcdf(outname)
+
+save_vcds(dirname=indirname, toplev=intoplev, outname=inoutname)
 
 #stdL-2
 #antcutL-2
@@ -100,5 +106,10 @@ def save_vcds(dirname, toplev, outname):
 #save_vcds(dirname='std4', toplev=20, outname='../vcd_partial_20L_std4_201807.nc')
 #save_vcds(dirname='antbe3', toplev=20, outname='../vcd_partial_20L_antbe3_201807.nc')
 
-save_vcds(dirname='std5', toplev=20, outname='../vcd_partial_20L_std5_201807.nc')
-save_vcds(dirname='antbe4', toplev=20, outname='../vcd_partial_20L_antbe4_201807.nc')
+#save_vcds(dirname='std5', toplev=20, outname='../vcd_partial_20L_std5_201807.nc')
+#save_vcds(dirname='antbe4', toplev=20, outname='../vcd_partial_20L_antbe4_201807.nc')
+
+#save_vcds(dirname='std6', toplev=20, outname='../vcd_partial_20L_std6_201807.nc')
+#save_vcds(dirname='antbe5', toplev=20, outname='../vcd_partial_20L_antbe5_201807.nc')
+
+

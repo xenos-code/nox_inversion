@@ -8,11 +8,28 @@ sys.path.insert(0, '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/scripts/hemi'
 from datetime import date
 from beta_calc_levs import *
 
-basedir = '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/'
-case = 'antbe1'
-base = 'std2'
+# excessive number of sys args...
+outdir   = sys.argv[1] # output directory for figures and analysis file
+datadir   = sys.argv[2] # dir where pre-computed files are stored
+emisdir  = sys.argv[3] # name of emissions created by previous iteration, like antbe5_posterior
+case     = sys.argv[4] # name (APPL) of this iteration
+base     = sys.argv[5] # name of non-GSI run in this iteration
+betafile = sys.argv[6] # file used for beta IF calcbeta=False
+month    = int(sys.argv[7]) # number of the month
+toplev   = int(sys.argv[8])
+calcbeta = sys.argv[9].lower() == 'true' # true or false, case insensitive
 
-emisdir='antbe0_posterior' # name of the directory containing the emissions used
+#optional
+if calcbeta:
+    cutfracfile = sys.argv[10] # analysis file of previous iteration with path, like /[path]/antbe4_inversion_analysis.nc
+    emisbase    = sys.argv[11] # name of emissions used as input to previous iteration, like antbe4_posterior
+    concdir     = sys.argv[12] # name of non-GSI run in previous iteration, this run uses emisbase as input (e.g. std6)
+
+
+#basedir = '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/'
+#case = 'antbe1'
+#base = 'std2'
+#emisdir='antbe0_posterior' # name of the directory containing the emissions used
     
 def do_nox_inversion(month, calcbeta=False):
     '''
@@ -29,56 +46,46 @@ def do_nox_inversion(month, calcbeta=False):
     edayi=0
     edayj=days*25
     
-    # JDE THese files aren't used? Commenting out
-    #metcro2df = sorted(glob(basedir+f'input_2018_hemi/mcip/METCRO2D.108NHEMI2.44L.180{month}??'))
-    #dmet2d = xr.open_mfdataset(metcro2df[-days:], combine='nested', concat_dim='TSTEP')
-    #
-    #metcro3df = sorted(glob(basedir+f'input_2018_hemi/mcip/METCRO3D.108NHEMI2.44L.180{month}??'))
-    #dmetcro3d = xr.open_mfdataset(metcro3df[-days:], combine='nested', concat_dim='TSTEP')
-    #
-    #gridcro2df = sorted(glob(basedir+f'input_2018_hemi/mcip/GRIDCRO2D.108NHEMI2.44L.180{month}01'))
-    #gridcro2d = xr.open_mfdataset(gridcro2df[-days:], combine='nested', concat_dim='TSTEP')
-    
     st = lenmonth-days+1
     start_date = date(2018,month,st)
     end_date = date(2018,month,lenmonth)
     datestr=f'{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}'
     
-    
-    emisfname = f'../noxemis_{emisdir}_{datestr}.nc'
-    emisfname2 = f'./noxemis_{emisdir}_{datestr}.nc'
-    try:
-        noxemis = open_emis(emisfname, start_date, end_date)
-    except FileNotFoundError:
-        noxemis = open_emis(emisfname2, start_date, end_date)
-        
+    emisfname = f'{datadir}/noxemis_{emisdir}_{datestr}.nc'
+    noxemis = open_emis(emisfname, start_date, end_date)
     
     # get VCDs and the difference
-    levs=20
-    gsivcd = get_columns(f'../vcd_partial_{levs}L_{case}_20180{month}.nc',start_date, end_date)
-    basevcd = get_columns(f'../vcd_partial_{levs}L_{base}_20180{month}.nc', start_date, end_date)
+    levs=toplev
+    gsivcd = get_columns(f'{datadir}/vcd_partial_{levs}L_{case}_2018{month:02}.nc',start_date, end_date)
+    basevcd = get_columns(f'{datadir}/vcd_partial_{levs}L_{base}_2018{month:02}.nc', start_date, end_date)
     diff = (gsivcd-basevcd).mean(dim='TSTEP').squeeze()
     diffrel = diff/(basevcd).mean(dim='TSTEP').squeeze()
 
     # Calculate a new beta?
     if calcbeta:
+        print('Calculating a new beta!', flush=True)
         # Open file created in monthly_beta() call
         beta20 = beta_monthly(start_date,
                               end_date,
                               lok=0,
-                              hik=20,
-                              concdir='stdL-2', # base case
-                              cutdir='std2', # perturbed case
-                              emisbase='2018',
-                              emisperturb='antbe0_posterior',
+                              hik=levs,
+                              concdir=concdir, #'stdL-2', # base case
+                              cutdir=base, #'std2', # perturbed case
+                              emisbase=emisbase, #'2018',
+                              emisperturb=emisdir,
                               **{'hourly':False,
-                                 'cutfracfile':'antbe0_inversion_analysis.nc',
+                                 'cutfracfile':cutfracfile, #'antbe4_inversion_analysis.nc',
                                  'slimit':True,
-                                 's_lim':0.05})
+                                 's_lim':0.01,
+                                 'min_limit': 0.01,
+                                 'max_limit': 10
+                                }
+                              )
 
     else:
-        beta20path = '../antbe1/antbe0_inversion_analysis.nc'
-        beta20 = (xr.open_dataset(beta20path)).BETA
+        print('Using static beta. NOT calculating a new beta!', flush=True)
+        d = xr.open_dataset(betafile)
+        beta20 = np.ma.masked_where(np.isnan(d.BETA),d.BETA)
     
     dEE = beta20*diffrel
     print(f'type(dEE): {type(dEE)}')
@@ -123,37 +130,41 @@ def do_nox_inversion(month, calcbeta=False):
     datestr=f'{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}'
     monthstr =f'{start_date.strftime("%Y%m")}' 
     #outf.to_netcdf(path=f'./{case}_inversion_analysis_{monthstr}.nc')
+    print('made it here 1',flush=True)
     
     # Plots
     btitle=rf'$\beta$, {beta20a.mean():0.2f} $\pm$ {beta20a.std():0.2f} '\
            rf'({beta20a.min():0.2f}, {beta20a.max():0.2f})'
     plot_hemi(beta20, title=btitle, lo=0.3, hi=1.7, cmap='Spectral_r',
-              save=True, fname=f'beta_{case}_{datestr}.png')
+              save=True, fname=f'{outdir}/beta_{case}_{datestr}.png')
     
     plot_hemi(diff,title=f'$\Delta \Omega$ mean filtered for overpass',
               lo=-0.5e14, hi=0.5e14, cmap='RdBu_r', units='molecules cm-2',
-              save=True, fname=f'analysis_increment_{case}_{datestr}.png')
+              save=True, fname=f'{outdir}/analysis_increment_{case}_{datestr}.png')
     
     plot_hemi(diffrel,title=r'$\Delta \Omega / \Omega$',
               lo=-0.5,hi=0.5, cmap='RdBu_r', units='fraction',
-              save=True, fname=f'analysis_increment_rel_{case}_{datestr}.png')
+              save=True, fname=f'{outdir}/analysis_increment_rel_{case}_{datestr}.png')
     
     # Calculate and plot the emissions change
     plot_hemi(dEE,title=r'$\frac{\Delta E}{E}$',units='fraction',
               lo=-0.1,hi=0.1,cmap='RdBu_r',
-              save=True, fname=f'emis_change_rel_{case}_{datestr}.png')
+              save=True, fname=f'{outdir}/emis_change_rel_{case}_{datestr}.png')
     
     # emis change mass
     plot_hemi(dE, title=r'$\Delta$ E', units='moles/s',
               lo=-2,hi=2, cmap='RdBu_r',
-              save=True, fname=f'emis_change_{case}_{datestr}.png')
+              save=True, fname=f'{outdir}/emis_change_{case}_{datestr}.png')
 
-    return outf
+    #return outf
 
-#outf_june = do_nox_inversion(6)
-outf_july = do_nox_inversion(7)
-#outff = xr.concat([outf_june, outf_july],dim='TSTEP')
-#outff.to_netcdf(path=f'./{case}_inversion_analysis.nc')
-outf_july.to_netcdf(path=f'./{case}_inversion_analysis.nc')
+    outpath = f'{outdir}/{case}_inversion_analysis.nc'
 
+    outf.attrs['file_creation_date'] = date.today().strftime('%Y%m%d')
+    outf.attrs['file_source_script'] = '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/scripts/hemi/nox_inversion/do_inversion_cli.py'
 
+    outf.to_netcdf(path=outpath)
+
+#outf_july = do_nox_inversion(7)
+do_nox_inversion(month, calcbeta=calcbeta)
+#outf_july.to_netcdf(path=outpath)

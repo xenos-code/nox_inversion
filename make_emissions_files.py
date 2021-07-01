@@ -9,10 +9,13 @@ import xarray as xr
 #OPTIONS
 start_date = date(2018,7,1) # first day to get emissions
 end_date = date(2018,7,31) # last day to get emissions
-emisdir = '2018' # emissions dir name. not full path.
+#emisdir = '2018' # emissions dir name. not full path.
 #emisdir = 'antbe0_posterior'
 #emisdir = 'antbe2_posterior'
 #emisdir = 'antbe3_posterior'
+#emisdir = 'antbe4_posterior'
+emisdir = sys.argv[1]
+datadir = sys.argv[2]
 
 
 #SCRIPT -- shouldn't have to change anything below here --
@@ -33,7 +36,7 @@ for d in range(int( (end_date-start_date).days )+1):
     noxemis = emissions_sums(epathsbase)
     noxemisout.append(noxemis)
 
-emisbasef = f'../noxemis_{emisdir}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
+emisbasef = f'{datadir}/noxemis_{emisdir}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
 (xr.concat([xr.merge([earray]) for earray in noxemisout], dim='TSTEP')).to_netcdf(emisbasef)
 
 
