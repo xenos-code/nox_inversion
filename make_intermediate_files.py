@@ -11,8 +11,6 @@ inoutname = sys.argv[3]
 basedir = sys.argv[4]
 yyyymm = sys.argv[5]
 
-sdate=datetime.strptime(yyyymm,'%Y%m')
-sdateout = sdate.strftime('%Y%j')
 #basedir = '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/'
 
 #metcro2df = glob(basedir+'input_2018_hemi/mcip/METCRO2D.108NHEMI2.44L.1807??')
@@ -25,6 +23,9 @@ def save_vcds(dirname, toplev, outname, yyyymm):
     '''
     Get all of July or June
     '''
+    sdate=datetime.strptime(yyyymm,'%Y%m')
+    sdateout = sdate.strftime('%Y%j')
+
     #files = glob(basedir+'output_2018_hemi/'+dirname+'/CCTM_CONC_*v532*GSI_201807*.nc')
     files = glob(basedir+'output/2019_hemi/'+dirname+f'/CCTM_CONC_*v532*GSI_{yyyymm}??.nc')
     files.sort()
@@ -42,7 +43,7 @@ def save_vcds(dirname, toplev, outname, yyyymm):
     # dataset attrs
     dout = dout.rename({'NO2':'NO2_VCD'})
     dout.attrs = d.attrs
-    dout.attrs['SDATE'] = np.int32(sdateout.strftime('%Y%j')) #2018182=July / June or July 1, 2018
+    dout.attrs['SDATE'] = np.int32(sdateout) #2018182=July / June or July 1, 2018
     dout.attrs['NLAYS'] = np.int32(1)
     dout.attrs['NVARS'] = np.int32(1)
     dout.attrs['VAR-LIST'] = 'NO2_VCD'
@@ -53,7 +54,7 @@ def save_vcds(dirname, toplev, outname, yyyymm):
     # save file
     dout.to_netcdf(outname)
 
-save_vcds(dirname=indirname, toplev=intoplev, outname=inoutname)
+save_vcds(dirname=indirname, toplev=intoplev, outname=inoutname, yyyymm=yyyymm)
 
 #stdL-2
 #antcutL-2

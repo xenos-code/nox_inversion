@@ -55,7 +55,8 @@ def beta_monthly(start_date, end_date, lok=0, hik=20, ltng=False, **kwargs):
     global dtz
     global dpop
 
-    basedir='/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/'
+    #basedir='/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/'
+    basedir='/work/MOD3EVAL/jeast/NO2ASSIM/CMAQ/'
     
     tzf = '/work/ROMO/gis_rasters/tz_world/ioapi/tz_world_hours_HEMIS.IOAPI.nc'
     popf = '/work/ROMO/gis_rasters/gpw-v4/gpw_v4_une_atotpopbt_densy_HEMIS.IOAPI.nc'
@@ -87,26 +88,34 @@ def beta_monthly(start_date, end_date, lok=0, hik=20, ltng=False, **kwargs):
         cutdtmp = xr.open_dataset(cutf)
         cutd = cutdtmp.isel(TSTEP=slice((start_date.day-1+d)*25, (start_date.day+d)*25-1)) # pick out 'today'
 
-        metcro2df = basedir+'input_2018_hemi/mcip/METCRO2D.108NHEMI2.44L.'+yymmdd
+        #metcro2df = basedir+'input_2018_hemi/mcip/METCRO2D.108NHEMI2.44L.'+yymmdd
+        metcro2df = basedir+f'input/2019_hemi/mcip/METCRO2D_{yyyymmdd}.nc4'
+        
+
+        anthonly = kwargs.get('anthonly',False)
         
         emisbase = kwargs.get('emisbase',None)
-        emisperturb=kwargs.get('emisperturb',None)
-
         emisbasef = f'noxemis_{emisbase}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
-        emisperturbf = f'noxemis_{emisperturb}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
-        
+
         # if nox emis file doesn't exist, ERROR
         if os.path.isfile(emisbasef):
             noxemisbase = open_emis(emisbasef, start_date+timedelta(days=d), start_date+timedelta(days=d))
         else:
             sys.exit(f'File {emisbasef} is missing, it is required, create with make_emissions_file.py!')
-            
-        if os.path.isfile(emisperturbf):
-            noxemisperturb = open_emis(emisperturbf, start_date+timedelta(days=d), start_date+timedelta(days=d))
-        else:
-            sys.exit(f'File {emisperturbf} is missing, it is required, create with make_emissions_file.py!')
+
+        if not ltng:
+            emisperturb=kwargs.get('emisperturb',None)
+
+            emisperturbf = f'noxemis_{emisperturb}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
+
+            if os.path.isfile(emisperturbf):
+                noxemisperturb = open_emis(emisperturbf, start_date+timedelta(days=d), start_date+timedelta(days=d))
+            else:
+                sys.exit(f'File {emisperturbf} is missing, it is required, create with make_emissions_file.py!')
+
+        else: #lightning case
+            noxemisperturb=None
     
-        anthonly = kwargs.get('anthonly',False)
             
         betas.append(
             beta_1day(concd,
@@ -140,7 +149,7 @@ def beta_1day(concd,
     dmet2d=xr.open_dataset(metcro2df)
     
     if ltng:
-        frac = lnox_frac(noxemis) #fraction of emissions that are lnox
+        frac = lnox_frac(noxemisbase) #fraction of emissions that are lnox
         isvalid = True # use all cells
         isoverpass = overpass_filter(concd.NO2_VCD)#, dtz)
         isclear = cloud_filter(dmet2d)
@@ -174,7 +183,7 @@ def beta_1day(concd,
                      lok=lok,
                      hik=hik,
                      anthonly=anthonly,
-                     ltng=ltng
+                     ltng=ltng,
                      **kwargs
                     )
 
@@ -246,14 +255,18 @@ def calc_beta(base, perturb, noxemisbase, noxemisperturb, antfrac, isvalid, lok,
             beta = hourly_beta()
         else:
             if ltng:
-                tmp = lnox_frac(noxemisbase.where(isvalid).sum(dim='TSTEP').squeeze())
+                #tmp = lnox_frac(noxemisbase.where(isvalid).sum(dim='TSTEP').squeeze())
+                # don't consider fraction of emissions that are LNOx
+                # considering them will lead to anthro influence
+                dEE = cutfrac
             else:
                 tmp = (antnox_filter(noxemisbase.where(isvalid).sum(dim='TSTEP').squeeze(), uselnox=False))[0]
-            dEE = cutfrac * tmp
+                dEE = cutfrac * tmp
+                del(tmp)
             if debug:
-                tmp.to_netcdf(f'./outputs_debug/antfrac-2018-7-{d}.nc')
+                if not ltng:
+                    tmp.to_netcdf(f'./outputs_debug/antfrac-2018-7-{d}.nc')
                 (xr.DataArray(cutfrac)).to_netcdf(f'./outputs_debug/cutfrac-2018-7-{d}.nc')
-            del(tmp)
             beta = daily_beta()
 
     # if min/mx limits given, apply here
