@@ -145,7 +145,7 @@ def beta_1day(concd,
         isoverpass = overpass_filter(concd.NO2_VCD)#, dtz)
         isclear = cloud_filter(dmet2d)
         isvalid = isvalid & isoverpass & isclear # clear sky overpass times only
-        cutfrac = 0.15 # because sign of lnox perturbation opposite of anth nox cut
+        cutfrac = 0.15
     else:
         # here better to use base or perturb emis? depends on case...
         frac, ismajorityant =  antnox_filter(noxemisperturb, uselnox=False) #fraction of emissionsthat are ant
