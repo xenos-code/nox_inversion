@@ -65,16 +65,17 @@ def do_nox_inversion(month, calcbeta=False):
     if calcbeta:
         print('Calculating a new beta!', flush=True)
         # Open file created in monthly_beta() call
-        beta20 = beta_monthly(start_date,
+        beta = beta_monthly(start_date,
                               end_date,
                               lok=0,
                               hik=levs,
+                              ltng=True,
                               concdir=concdir, #'stdL-2', # base case
                               cutdir=base, #'std2', # perturbed case
                               emisbase=emisbase, #'2018',
                               emisperturb=emisdir,
                               **{'hourly':False,
-                                 'cutfracfile':cutfracfile, #'antbe4_inversion_analysis.nc',
+                                 'cutfrac':0.15, # cutfrac for lnox=0.15
                                  'slimit':True,
                                  's_lim':0.01,
                                  'min_limit': 0.01,
@@ -85,9 +86,9 @@ def do_nox_inversion(month, calcbeta=False):
     else:
         print('Using static beta. NOT calculating a new beta!', flush=True)
         d = xr.open_dataset(betafile)
-        beta20 = np.ma.masked_where(np.isnan(d.BETA),d.BETA)
+        beta = np.ma.masked_where(np.isnan(d.BETA),d.BETA)
     
-    dEE = beta20*diffrel
+    dEE = beta*diffrel
     #print(f'type(dEE): {type(dEE)}')
     dEE = np.where(dEE.mask, 0, dEE) # make all NaNs zero, there should not be NaNs in emis
     #print(f'type(dEE): {type(dEE)}')
@@ -96,12 +97,12 @@ def do_nox_inversion(month, calcbeta=False):
     dE = dEE*noxemis.anth.mean(dim='TSTEP').squeeze()
     #print(f'type(dE): {type(dE)}')
     
-    beta20a = beta20.copy()
-    beta20 = xr.DataArray(beta20)
-    beta20 = beta20.rename('BETA')
-    beta20 = beta20.rename({'dim_0':'ROW', 'dim_1':'COL'})
-    beta20.attrs['units'] = 'unitless'
-    beta20.attrs['var_desc'] = 'unitless scaling factor beta'
+    betaa = beta.copy()
+    beta = xr.DataArray(beta)
+    beta = beta.rename('BETA')
+    beta = beta.rename({'dim_0':'ROW', 'dim_1':'COL'})
+    beta.attrs['units'] = 'unitless'
+    beta.attrs['var_desc'] = 'unitless scaling factor beta'
     
     diff = diff.rename('NO2INC')
     diff.attrs['units'] = 'molecules cm-2'
@@ -126,16 +127,16 @@ def do_nox_inversion(month, calcbeta=False):
     dE.attrs['units'] = 'moles/s'
     dE.attrs['var_desc'] = 'mass emissions change'
     
-    outf = xr.merge([beta20, diff, diffrel, dEE, dE])
+    outf = xr.merge([beta, diff, diffrel, dEE, dE])
     datestr=f'{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}'
     monthstr =f'{start_date.strftime("%Y%m")}' 
     #outf.to_netcdf(path=f'./{case}_inversion_analysis_{monthstr}.nc')
     #print('made it here 1',flush=True)
     
     # Plots
-    btitle=rf'$\beta$, {beta20a.mean():0.2f} $\pm$ {beta20a.std():0.2f} '\
-           rf'({beta20a.min():0.2f}, {beta20a.max():0.2f})'
-    plot_hemi(beta20, title=btitle, lo=0.3, hi=1.7, cmap='Spectral_r',
+    btitle=rf'$\beta$, {betaa.mean():0.2f} $\pm$ {betaa.std():0.2f} '\
+           rf'({betaa.min():0.2f}, {betaa.max():0.2f})'
+    plot_hemi(beta, title=btitle, lo=0.3, hi=1.7, cmap='Spectral_r',
               save=True, fname=f'{outdir}/beta_{case}_{datestr}.png')
     
     plot_hemi(diff,title=f'$\Delta \Omega$ mean filtered for overpass',

@@ -3,24 +3,30 @@
 import sys
 sys.path.insert(0, '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/scripts/hemi')
 from beta_calc_levs import *
-from datetime import date
+from datetime import date, datetime
 
 indirname = sys.argv[1]
 intoplev  = int(sys.argv[2])
 inoutname = sys.argv[3]
+basedir = sys.argv[4]
+yyyymm = sys.argv[5]
 
-basedir = '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/'
+sdate=datetime.strptime(yyyymm,'%Y%m')
+sdateout = sdate.strftime('%Y%j')
+#basedir = '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/'
 
-metcro2df = glob(basedir+'input_2018_hemi/mcip/METCRO2D.108NHEMI2.44L.1807??')
+#metcro2df = glob(basedir+'input_2018_hemi/mcip/METCRO2D.108NHEMI2.44L.1807??')
+metcro2df = glob(basedir+f'input/2019_hemi/mcip/METCRO2D_{yyyymm}??.nc4')
 metcro2df.sort()
 dmet2d = xr.open_mfdataset(metcro2df, combine='nested', concat_dim='TSTEP')
 dmet2d = dmet2d.load()
 
-def save_vcds(dirname, toplev, outname):
+def save_vcds(dirname, toplev, outname, yyyymm):
     '''
     Get all of July or June
     '''
-    files = glob(basedir+'output_2018_hemi/'+dirname+'/CCTM_CONC_*v532*GSI_201807*.nc')
+    #files = glob(basedir+'output_2018_hemi/'+dirname+'/CCTM_CONC_*v532*GSI_201807*.nc')
+    files = glob(basedir+'output/2019_hemi/'+dirname+f'/CCTM_CONC_*v532*GSI_{yyyymm}??.nc')
     files.sort()
     d = xr.open_mfdataset(files, combine='nested', concat_dim='TSTEP')
     vcd = tovcd_partial(d.NO2,dmet2d,d,0,toplev)
@@ -36,11 +42,11 @@ def save_vcds(dirname, toplev, outname):
     # dataset attrs
     dout = dout.rename({'NO2':'NO2_VCD'})
     dout.attrs = d.attrs
-    dout.attrs['SDATE'] = np.int32(2018182) #2018182=July / June or July 1, 2018
+    dout.attrs['SDATE'] = np.int32(sdateout.strftime('%Y%j')) #2018182=July / June or July 1, 2018
     dout.attrs['NLAYS'] = np.int32(1)
     dout.attrs['NVARS'] = np.int32(1)
     dout.attrs['VAR-LIST'] = 'NO2_VCD'
-    dout.attrs['file_creation_date'] = date.today().strftime('%Y%m%d')
+    dout.attrs['file_creation_date'] = date.today().strftime('%Y%m%d-%H:%M:%S')
     dout.attrs['file_source_script'] = '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/scripts/hemi/make_intermediate_files.py'
     dout.attrs['source_conc_files'] = files
 

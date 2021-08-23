@@ -3,34 +3,47 @@
 import sys
 sys.path.insert(0, '.')
 from beta_calc_levs import emissions_sums
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import xarray as xr
+from calendar import monthrange
 
 #OPTIONS
-start_date = date(2018,7,1) # first day to get emissions
-end_date = date(2018,7,31) # last day to get emissions
+#start_date = date(2018,7,1) # first day to get emissions
+#end_date = date(2018,7,31) # last day to get emissions
 #emisdir = '2018' # emissions dir name. not full path.
 #emisdir = 'antbe0_posterior'
 #emisdir = 'antbe2_posterior'
 #emisdir = 'antbe3_posterior'
 #emisdir = 'antbe4_posterior'
+#basedir='/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/'
+
 emisdir = sys.argv[1]
 datadir = sys.argv[2]
-
+basedir = sys.argv[3]
+yyyymm = sys.argv[4]
 
 #SCRIPT -- shouldn't have to change anything below here --
-basedir='/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/'
+
+start_date = datetime.strptime(yyyymm,'%Y%m')
+mlength = monthrange(start_date.year, start_date.month)[1]
+end_date = (start_date + timedelta(mlength-1))
 
 noxemisout = []
-for d in range(int( (end_date-start_date).days )+1):
+#for d in range(int( (end_date-start_date).days )+1):
+for d in range(mlength):
     yyyymmdd = (start_date + timedelta(d)).strftime("%Y%m%d")
     print(f'Getting date: {yyyymmdd}', flush=True)
     epathsbase = {
-        'anth': basedir+'input_2018_hemi/emis/'+emisdir+'/repemis_mole_all.'+yyyymmdd+'.nc',
-        'soil': basedir+'input_2018_hemi/emis/2018/CAMS-108NHEMI2-SOIL_Glb_0.5x0.5_soil_nox_v1.1_2015-07-15.nc',
-        'ship': basedir+'input_2018_hemi/emis/2018/repemis_mole_all_shipping.'+yyyymmdd+'.nc',
-        'fire': basedir+'input_2018_hemi/emis/2018/emis_mole_3d_finnfires_'+yyyymmdd+'_HEMI_108k.ncf',
-        'lnox': basedir+'input_2018_hemi/emis/2018/emis_mole_lightning_20170711_HEMI_108k_cmaq_cb6_2017ga_hemi_cb6_17jh.ncf'
+        'anth': basedir+'input/2019_hemi/emis/2019_inversion/'+emisdir+'/repemis_mole_all.'+yyyymmdd+'.nc',
+        'soil': basedir+'input/2019_hemi/emis/2019_inversion/'+emisdir+'/CAMS-108NHEMI2-SOIL_Glb_0.5x0.5_soil_nox_v1.1_2015-07-15.nc',
+        'ship': basedir+'input/2019_hemi/emis/2019_inversion/'+emisdir+'/repemis_mole_all_shipping.'+yyyymmdd+'.nc',
+        'fire': basedir+'input/2019_hemi/emis/2019_inversion/'+emisdir+'/emis_mole_3d_finnfires_'+yyyymmdd+'_HEMI_108k.ncf',
+        'lnox': basedir+'input/2019_hemi/emis/2019_inversion/'+emisdir+'/emis_mole_lightning_20170711_HEMI_108k_cmaq_cb6_2017ga_hemi_cb6_17jh.ncf'
+        #'anth': basedir+'input_2018_hemi/emis/'+emisdir+'/repemis_mole_all.'+yyyymmdd+'.nc',
+        #'soil': basedir+'input_2018_hemi/emis/2018/CAMS-108NHEMI2-SOIL_Glb_0.5x0.5_soil_nox_v1.1_2015-07-15.nc',
+        #'ship': basedir+'input_2018_hemi/emis/2018/repemis_mole_all_shipping.'+yyyymmdd+'.nc',
+        #'fire': basedir+'input_2018_hemi/emis/2018/emis_mole_3d_finnfires_'+yyyymmdd+'_HEMI_108k.ncf',
+        #'lnox': basedir+'input_2018_hemi/emis/2018/emis_mole_lightning_20170711_HEMI_108k_cmaq_cb6_2017ga_hemi_cb6_17jh.ncf'
     }
 
     noxemis = emissions_sums(epathsbase)

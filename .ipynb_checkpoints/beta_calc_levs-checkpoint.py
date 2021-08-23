@@ -5,7 +5,6 @@ import numpy as np
 import sys
 from glob import glob
 import matplotlib.pyplot as plt
-import matplotlib.colors as colors
 from datetime import date, timedelta
 import os.path
 
@@ -49,8 +48,6 @@ def beta_monthly(start_date, end_date, lok=0, hik=20, ltng=False, **kwargs):
                           relative emissions change array used for beta
         anthonly=False
         debug=False: if True, save out some netcdfs for debugging
-        min_limit=None (float): optional lower limit for beta. Applied at daily level
-        max_limit=None (float): optional upper limit for beta. Applied at daily level
     '''
     global dtz
     global dpop
@@ -145,7 +142,7 @@ def beta_1day(concd,
         isoverpass = overpass_filter(concd.NO2_VCD)#, dtz)
         isclear = cloud_filter(dmet2d)
         isvalid = isvalid & isoverpass & isclear # clear sky overpass times only
-        cutfrac = 0.15
+        cutfrac = -0.15 # because sign of lnox perturbation opposite of anth nox cut
     else:
         # here better to use base or perturb emis? depends on case...
         frac, ismajorityant =  antnox_filter(noxemisperturb, uselnox=False) #fraction of emissionsthat are ant
@@ -174,12 +171,11 @@ def beta_1day(concd,
                      lok=lok,
                      hik=hik,
                      anthonly=anthonly,
-                     ltng=ltng
                      **kwargs
                     )
 
 
-def calc_beta(base, perturb, noxemisbase, noxemisperturb, antfrac, isvalid, lok, hik, anthonly=False, ltng=False, **kwargs):
+def calc_beta(base, perturb, noxemisbase, noxemisperturb, antfrac, isvalid, lok, hik, anthonly=False, **kwargs):
     '''
     beta = dE/E * VCD/dVCD
     '''
@@ -196,9 +192,6 @@ def calc_beta(base, perturb, noxemisbase, noxemisperturb, antfrac, isvalid, lok,
     
     cutfracfile = kwargs.get('cutfracfile',None)
     cutfrac = kwargs.get('cutfrac',None)
-
-    min_limit = kwargs.get('min_limit', None)
-    max_limit = kwargs.get('max_limit', None)
 
     if cutfrac is None:
         if cutfracfile is None:
@@ -245,22 +238,13 @@ def calc_beta(base, perturb, noxemisbase, noxemisperturb, antfrac, isvalid, lok,
                 antfrac.where(isvalid).to_netcdf(f'./outputs_debug/antfrac-2018-7-{d:02d}.nc')
             beta = hourly_beta()
         else:
-            if ltng:
-                tmp = lnox_frac(noxemisbase.where(isvalid).sum(dim='TSTEP').squeeze())
-            else:
-                tmp = (antnox_filter(noxemisbase.where(isvalid).sum(dim='TSTEP').squeeze(), uselnox=False))[0]
+            tmp = (antnox_filter(noxemisbase.where(isvalid).sum(dim='TSTEP').squeeze(), uselnox=False))[0]
             dEE = cutfrac * tmp
             if debug:
                 tmp.to_netcdf(f'./outputs_debug/antfrac-2018-7-{d}.nc')
                 (xr.DataArray(cutfrac)).to_netcdf(f'./outputs_debug/cutfrac-2018-7-{d}.nc')
             del(tmp)
             beta = daily_beta()
-
-    # if min/mx limits given, apply here
-    if min_limit:
-        beta.values[beta.values<min_limit] = min_limit
-    if max_limit:
-        beta.values[beta.values>max_limit] = max_limit
  
     return beta.to_masked_array()
 
@@ -452,11 +436,7 @@ def tovcd_partial(x, dmet2d, dconc, lok, hik):
 # Plotting stuff below here
 def plot_hemi(a, title='hemi', cmap='viridis', cbar=True, save=False, **kwargs):
     plt.close('all')
-    lognorm = kwargs.get('lognorm',False)
-    if lognorm:
-        plt.pcolormesh(a, norm=colors.LogNorm()) # set vmin, vmax manually
-    else:
-        plt.pcolormesh(a)
+    plt.pcolormesh(a)
     cno.draw()
     if cbar:
         cb = plt.colorbar()
