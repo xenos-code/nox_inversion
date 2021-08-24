@@ -463,8 +463,12 @@ def tovcd_partial(x, dmet2d, dconc, lok, hik):
 
 
 # Plotting stuff below here
-def plot_hemi(a, title='hemi', cmap='viridis', cbar=True, save=False, **kwargs):
-    plt.close('all')
+def plot_hemi(a, title='hemi', cmap='viridis', cbar=True, show=True, save=False, retax=False,ca=None,**kwargs):
+    
+    if ca is not None:
+        ax = plt.sca(ca)
+    else:
+        plt.close('all')
     lognorm = kwargs.get('lognorm',False)
     if lognorm:
         plt.pcolormesh(a, norm=colors.LogNorm()) # set vmin, vmax manually
@@ -494,7 +498,14 @@ def plot_hemi(a, title='hemi', cmap='viridis', cbar=True, save=False, **kwargs):
         #fig.set_size_inches((10,10))
         plt.savefig(fname, dpi=600)
     else:
-        plt.show()
+        if retax:
+            ax = plt.gca()
+            return ax
+        else:
+            if show:
+                plt.show()
+            else:
+                return
 
 
 def plot_beta(beta, cbar=True):
