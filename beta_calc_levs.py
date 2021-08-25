@@ -80,17 +80,17 @@ def beta_monthly(start_date, end_date, datadir, lok=0, hik=20, ltng=False, **kwa
         print(f'Current date: {yyyymmdd}', flush=True)
 
         concdir = kwargs.get('concdir',None)
-        concf = basedir+f'{datadir}/vcd_partial_{hik}L_{concdir}_{yyyymm}.nc'
+        concf = f'{datadir}/vcd_partial_{hik}L_{concdir}_{yyyymm}.nc'
         concdtmp = xr.open_dataset(concf)
         concd = concdtmp.isel(TSTEP=slice((start_date.day-1+d)*25, (start_date.day+d)*25-1)) # pick out 'today'
 
         cutdir = kwargs.get('cutdir',None)
-        cutf = basedir+f'{datadir}/vcd_partial_{hik}L_{cutdir}_{yyyymm}.nc'
+        cutf = f'{datadir}/vcd_partial_{hik}L_{cutdir}_{yyyymm}.nc'
         cutdtmp = xr.open_dataset(cutf)
         cutd = cutdtmp.isel(TSTEP=slice((start_date.day-1+d)*25, (start_date.day+d)*25-1)) # pick out 'today'
 
         #metcro2df = basedir+'input_2018_hemi/mcip/METCRO2D.108NHEMI2.44L.'+yymmdd
-        metcro2df = basedir+f'input/2019_hemi/mcip/METCRO2D_{yyyymmdd}.nc4'
+        metcro2df = f'{basedir}/input/2019_hemi/mcip/METCRO2D_{yyyymmdd}.nc4'
         
 
         anthonly = kwargs.get('anthonly',False)

@@ -7,6 +7,7 @@ import sys
 sys.path.insert(0, '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/scripts/hemi')
 from datetime import date, datetime
 from beta_calc_levs import *
+from calendar import monthrange
 
 # excessive number of sys args...
 outdir   = sys.argv[1] # output directory for figures and analysis file
@@ -33,9 +34,11 @@ def do_nox_inversion(month):
     creates plots, saved to cwd 
     returns: analysis file for scaling emissions as dataset
     '''
-    monthcurrent = date(2019,month,1)
-    monthnext = date(2019,month+1,1)
-    lenmonth = (monthnext - monthcurrent).days
+    #monthcurrent = date(2019,month,1)
+    #monthnext = date(2019,month+1,1)
+    #lenmonth = (monthnext - monthcurrent).days
+
+    lenmonth = monthrange(2019,month)[1]
     
     days=lenmonth # How many days do you want?
     edayi=0
