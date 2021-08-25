@@ -48,23 +48,25 @@ def do_nox_inversion(month):
     
     print('Calculating a new beta!', flush=True)
     # Open file created in monthly_beta() call
-    beta = beta_monthly(start_date,
-                        end_date,
-                        lok=0,
-                        hik=toplev,
-                        ltng=True,
-                        concdir=base, # base case
-                        cutdir=cut, # perturbed case
-                        emisbase=emisdir,
-                        emisperturb=None,
-                        **{'hourly':False,
-                           'cutfrac':0.15, # cutfrac for lnox=0.15
-                           'slimit':True,
-                           's_lim':0.01,
-                           'min_limit': 0.01,
-                           'max_limit': 10
-                          }
-                        )
+    beta = beta_monthly(
+        start_date,
+        end_date,
+        datadir,
+        lok=0,
+        hik=toplev,
+        ltng=True,
+        concdir=base, # base case
+        cutdir=cut, # perturbed case
+        emisbase=emisdir,
+        emisperturb=None,
+        **{'hourly':False,
+           'cutfrac':0.15, # cutfrac for lnox=0.15
+           'slimit':True,
+           's_lim':0.01,
+           'min_limit': 0.01,
+           'max_limit': 10
+          }
+    )
 
     ##
     # Calc LNOX emissions update

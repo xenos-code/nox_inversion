@@ -27,11 +27,12 @@ dtz=0; dpop=0
 haslon=False
 lon=0
 
-def beta_monthly(start_date, end_date, lok=0, hik=20, ltng=False, **kwargs):
+def beta_monthly(start_date, end_date, datadir, lok=0, hik=20, ltng=False, **kwargs):
     '''
     args:
         start_date: datetime date obj
         end_date: datetime date obj
+        datadir: dir where intermediate VCD and emis files are stored
         lok=0: lowest model level to include
         hik=20: highest model level to include
         ltng=False: whether this is a lightning inversion (usually not)
@@ -79,12 +80,12 @@ def beta_monthly(start_date, end_date, lok=0, hik=20, ltng=False, **kwargs):
         print(f'Current date: {yyyymmdd}', flush=True)
 
         concdir = kwargs.get('concdir',None)
-        concf = basedir+f'scripts/hemi/vcd_partial_{hik}L_{concdir}_{yyyymm}.nc'
+        concf = basedir+f'{datadir}/vcd_partial_{hik}L_{concdir}_{yyyymm}.nc'
         concdtmp = xr.open_dataset(concf)
         concd = concdtmp.isel(TSTEP=slice((start_date.day-1+d)*25, (start_date.day+d)*25-1)) # pick out 'today'
 
         cutdir = kwargs.get('cutdir',None)
-        cutf = basedir+f'scripts/hemi/vcd_partial_{hik}L_{cutdir}_{yyyymm}.nc'
+        cutf = basedir+f'{datadir}/vcd_partial_{hik}L_{cutdir}_{yyyymm}.nc'
         cutdtmp = xr.open_dataset(cutf)
         cutd = cutdtmp.isel(TSTEP=slice((start_date.day-1+d)*25, (start_date.day+d)*25-1)) # pick out 'today'
 
@@ -95,7 +96,7 @@ def beta_monthly(start_date, end_date, lok=0, hik=20, ltng=False, **kwargs):
         anthonly = kwargs.get('anthonly',False)
         
         emisbase = kwargs.get('emisbase',None)
-        emisbasef = f'noxemis_{emisbase}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
+        emisbasef = f'{datadir}/noxemis_{emisbase}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
 
         # if nox emis file doesn't exist, ERROR
         if os.path.isfile(emisbasef):
@@ -105,8 +106,7 @@ def beta_monthly(start_date, end_date, lok=0, hik=20, ltng=False, **kwargs):
 
         if not ltng:
             emisperturb=kwargs.get('emisperturb',None)
-
-            emisperturbf = f'noxemis_{emisperturb}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
+            emisperturbf = f'{datadir}/noxemis_{emisperturb}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
 
             if os.path.isfile(emisperturbf):
                 noxemisperturb = open_emis(emisperturbf, start_date+timedelta(days=d), start_date+timedelta(days=d))
