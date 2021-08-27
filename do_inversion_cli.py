@@ -52,7 +52,7 @@ def do_nox_inversion(month, calcbeta=False):
             start_date,
             end_date,
             lok=0,
-            hik=levs,
+            hik=toplev,
             concdir=base, # base case
             cutdir=cut, # perturbed case
             emisbase=emisdir,
