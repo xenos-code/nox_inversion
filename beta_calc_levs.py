@@ -106,7 +106,7 @@ def beta_monthly(start_date, end_date, datadir, lok=0, hik=20, ltng=False, **kwa
 
         cutfrac = kwargs.get('cutfrac',None)
         if not ltng:
-            if cutfrac is not None:
+            if cutfrac is None:
                 emisperturb=kwargs.get('emisperturb',None)
                 emisperturbf = f'{datadir}/noxemis_{emisperturb}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
 
@@ -114,6 +114,8 @@ def beta_monthly(start_date, end_date, datadir, lok=0, hik=20, ltng=False, **kwa
                     noxemisperturb = open_emis(emisperturbf, start_date+timedelta(days=d), start_date+timedelta(days=d))
                 else:
                     sys.exit(f'File {emisperturbf} is missing, it is required, create with make_emissions_file.py!')
+            else:
+                noxemisperturb=None
 
         else: #lightning case
             noxemisperturb=None
@@ -159,7 +161,7 @@ def beta_1day(concd,
         cutfrac = 0.15
     else:
         # here better to use base or perturb emis? depends on case...
-        frac, ismajorityant =  antnox_filter(noxemisperturb, uselnox=False) #fraction of emissionsthat are ant
+        frac, ismajorityant =  antnox_filter(noxemisbase, uselnox=False) #fraction of emissionsthat are ant
         isoverpass = overpass_filter(concd.NO2_VCD)#, dtz)
         isurban = urban_filter(dpop)
         isclear = cloud_filter(dmet2d)

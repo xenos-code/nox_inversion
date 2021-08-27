@@ -51,8 +51,10 @@ def do_nox_inversion(month, calcbeta=False):
         beta = beta_monthly(
             start_date,
             end_date,
+            datadir,
             lok=0,
             hik=toplev,
+            ltng=False,
             concdir=base, # base case
             cutdir=cut, # perturbed case
             emisbase=emisdir,
@@ -90,28 +92,28 @@ def do_nox_inversion(month, calcbeta=False):
 
     dE = dEE*noxemis['anth'].mean(dim='TSTEP').squeeze()
     
-    betaa = beta.copy()
+    betaa = beta.astype(np.float32)
     beta = xr.DataArray(beta)
     beta = beta.rename('BETA')
     beta = beta.rename({'dim_0':'ROW', 'dim_1':'COL'})
     beta.attrs['units'] = 'unitless'
     beta.attrs['var_desc'] = 'unitless scaling factor beta'
     
-    diff = diff.rename('NO2INC')
+    diff = diff.rename('NO2INC').astype(np.float32)
     diff.attrs['units'] = 'molecules cm-2'
     diff.attrs['var_desc'] = 'month average analysis increment'
     
-    diffrel = diffrel.rename('NO2INCR') 
+    diffrel = diffrel.rename('NO2INCR').astype(np.float32) 
     diffrel.attrs['units'] = 'fraction'
     diffrel.attrs['var_desc'] = 'month average relative analysis increment'
     
-    dEE = xr.DataArray(dEE)
+    dEE = xr.DataArray(dEE).astype(np.float32)
     dEE = dEE.rename('EMISDELR')
     dEE = dEE.rename({'dim_0':'ROW', 'dim_1':'COL'})
     dEE.attrs['units'] = 'fraction'
     dEE.attrs['var_desc'] = 'relative emissions change'
     
-    dE = xr.DataArray(dE)
+    dE = xr.DataArray(dE).astype(np.float32)
     dE = dE.rename('EMISDEL') 
     dE.attrs['units'] = 'moles/s'
     dE.attrs['var_desc'] = 'mass emissions change'

@@ -32,8 +32,10 @@ echo ''
 
 #ncks -O -v NO,NO2,HONO ${emisfile} ${emisfile}.tmp #extract NOx for multiplication
 #ncks -A -v scalefactor scalefactor.nc ${emisfile}.tmp #should append vars from scalefactor.nc into new emis.tmp file
-ncks -O -v NO,NO2,HONO ${emisfile} ${outf}.tmp #extract NOx for multiplication
-ncks -A -v scalefactor scalefactor.nc ${outf}.tmp #should append vars from scalefactor.nc into new emis.tmp file
+echo ncks -6 -O -v NO,NO2,HONO ${emisfile} ${emisfile}.tmp #extract NOx for multiplication
+echo ncks -6 -A -v scalefactor scalefactor.nc ${emisfile}.tmp #should append vars from scalefactor.nc into new emis.tmp file
+ncks -6 -O -v NO,NO2,HONO ${emisfile} ${emisfile}.tmp #extract NOx for multiplication
+ncks -6 -A -v scalefactor scalefactor.nc ${emisfile}.tmp #should append vars from scalefactor.nc into new emis.tmp file
 
 # Dont create emissions where they dont exist
 cat > scalenox.nco << EOF
@@ -41,9 +43,14 @@ where(NO>0) NO=NO*scalefactor;
 where(NO2>0) NO2=NO2*scalefactor;
 where(HONO>0) HONO=HONO*scalefactor;
 EOF
-ncap2 -S scalenox.nco ${outf}.tmp #scale NOx vars in tmp file
-cp ${emisfile} ${baseemisdir}/${emisnew}/${outf} 
-ncks -A -h -v NO,NO2,HONO ${outf}.tmp ${baseemisdir}/${emisnew}/${outf} # overwrite scaled NOx vars to emis file
+echo ncap2 -S scalenox.nco ${emisfile}.tmp #scale NOx vars in tmp file
+ncap2 -S scalenox.nco ${emisfile}.tmp #scale NOx vars in tmp file
+#cp ${emisfile} ${baseemisdir}/${emisnew}/${outf} 
+#nccopy -k nc3 ${emisfile} ${baseemisdir}/${emisnew}/${outf} 
+echo ncks -6 -O ${emisfile} ${baseemisdir}/${emisnew}/${outf} 
+ncks -6 -O ${emisfile} ${baseemisdir}/${emisnew}/${outf} 
+echo ncks -6 -A -h -v NO,NO2,HONO ${emisfile}.tmp ${baseemisdir}/${emisnew}/${outf} # overwrite scaled NOx vars to emis file
+ncks -6 -A -h -v NO,NO2,HONO ${emisfile}.tmp ${baseemisdir}/${emisnew}/${outf} # overwrite scaled NOx vars to emis file
 rm ${emisfile}.tmp
 
 done
