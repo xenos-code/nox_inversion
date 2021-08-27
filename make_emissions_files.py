@@ -40,7 +40,7 @@ for d in range(mlength):
         'soil': basedir+'input/2019_hemi/emis/2019_inversion/'+emisdir+f'/CAMS-108NHEMI2-SOIL_Glb_0.5x0.5_soil_nox_v2.1_2018-{mstr}-15.nc',
         'ship': basedir+'input/2019_hemi/emis/2019_inversion/'+emisdir+'/repemis_mole_all_shipping.'+yyyymmdd+'.nc',
         'fire': basedir+'input/2019_hemi/emis/2019_inversion/'+emisdir+'/emis_mole_3d_finnfires_'+yyyymmdd+'_HEMI_108k.ncf',
-        'lnox': glob(basedir+'input/2019_hemi/emis/2019_inversion/'+emisdir+f'/emis_mole_lightning_2017{mstr}??_HEMI_108k_cmaq_cb6_2017ga_hemi_cb6_17jh.ncf')[0]
+        'lnox': glob(basedir+'input/2019_hemi/emis/2019_inversion/'+emisdir+f'/emis_mole_lightning_2017{mstr}??_HEMI_108k_cmaq_cb6_2017ga_hemi_cb6_17jh*ncf')[0]
         #'anth': basedir+'input_2018_hemi/emis/'+emisdir+'/repemis_mole_all.'+yyyymmdd+'.nc',
         #'soil': basedir+'input_2018_hemi/emis/2018/CAMS-108NHEMI2-SOIL_Glb_0.5x0.5_soil_nox_v1.1_2015-07-15.nc',
         #'ship': basedir+'input_2018_hemi/emis/2018/repemis_mole_all_shipping.'+yyyymmdd+'.nc',

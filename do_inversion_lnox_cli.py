@@ -22,11 +22,6 @@ toplev   = int(sys.argv[8])
 #calcbeta = sys.argv[9].lower() == 'true' # true or false, case insensitive
 
 
-#basedir = '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/'
-#case = 'antbe1'
-#base = 'std2'
-#emisdir='antbe0_posterior' # name of the directory containing the emissions used
-    
 def do_nox_inversion(month):
     '''
     month: int of month (e.g. 6 for June)
@@ -37,7 +32,6 @@ def do_nox_inversion(month):
     #monthcurrent = date(2019,month,1)
     #monthnext = date(2019,month+1,1)
     #lenmonth = (monthnext - monthcurrent).days
-
     lenmonth = monthrange(2019,month)[1]
     
     days=lenmonth # How many days do you want?
@@ -64,8 +58,8 @@ def do_nox_inversion(month):
         emisperturb=None,
         **{'hourly':False,
            'cutfrac':0.15, # cutfrac for lnox=0.15
-           'slimit':True,
-           's_lim':0.01,
+           'slimit':False,#True,
+           #'s_lim':0.01,
            'min_limit': 0.01,
            'max_limit': 10
           }

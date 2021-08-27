@@ -104,14 +104,16 @@ def beta_monthly(start_date, end_date, datadir, lok=0, hik=20, ltng=False, **kwa
         else:
             sys.exit(f'File {emisbasef} is missing, it is required, create with make_emissions_file.py!')
 
+        cutfrac = kwargs.get('cutfrac',None)
         if not ltng:
-            emisperturb=kwargs.get('emisperturb',None)
-            emisperturbf = f'{datadir}/noxemis_{emisperturb}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
+            if cutfrac is not None:
+                emisperturb=kwargs.get('emisperturb',None)
+                emisperturbf = f'{datadir}/noxemis_{emisperturb}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
 
-            if os.path.isfile(emisperturbf):
-                noxemisperturb = open_emis(emisperturbf, start_date+timedelta(days=d), start_date+timedelta(days=d))
-            else:
-                sys.exit(f'File {emisperturbf} is missing, it is required, create with make_emissions_file.py!')
+                if os.path.isfile(emisperturbf):
+                    noxemisperturb = open_emis(emisperturbf, start_date+timedelta(days=d), start_date+timedelta(days=d))
+                else:
+                    sys.exit(f'File {emisperturbf} is missing, it is required, create with make_emissions_file.py!')
 
         else: #lightning case
             noxemisperturb=None
@@ -195,19 +197,14 @@ def calc_beta(base, perturb, noxemisbase, noxemisperturb, antfrac, isvalid, lok,
     basevcd = base.NO2_VCD.where(isvalid).load()
     cutvcd = perturb.NO2_VCD.where(isvalid).load()
     
-    hourly = kwargs.get('hourly', True)
-
-    debug = kwargs.get('debug', False)
-
-    slimit = kwargs.get('slimit', False)
-    
-    s_lim = kwargs.get('s_lim', 0.01) #cutoff fraction
-    
+    hourly      = kwargs.get('hourly', True)
+    debug       = kwargs.get('debug', False)
+    slimit      = kwargs.get('slimit', False)
+    s_lim       = kwargs.get('s_lim', 0.01) #cutoff fraction
     cutfracfile = kwargs.get('cutfracfile',None)
-    cutfrac = kwargs.get('cutfrac',None)
-
-    min_limit = kwargs.get('min_limit', None)
-    max_limit = kwargs.get('max_limit', None)
+    cutfrac     = kwargs.get('cutfrac',None)
+    min_limit   = kwargs.get('min_limit', None)
+    max_limit   = kwargs.get('max_limit', None)
 
     if cutfrac is None:
         if cutfracfile is None:
