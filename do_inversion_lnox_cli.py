@@ -16,13 +16,13 @@ emisdir  = sys.argv[3] # name of unperturbed emissions
 base     = sys.argv[4] # name of non-GSI/std run 
 cut     = sys.argv[5] # name (APPL) of perturbed/cut run
 gsirun   = sys.argv[6] # name of GSI run
-#betafile = sys.argv[6] # file used for beta IF calcbeta=False
 month    = int(sys.argv[7]) # number of the month
 toplev   = int(sys.argv[8])
-#calcbeta = sys.argv[9].lower() == 'true' # true or false, case insensitive
+calcbeta = sys.argv[9].lower() == 'true' # true or false, case insensitive
+betafile = sys.argv[10] # file used for beta IF calcbeta=False
 
 
-def do_nox_inversion(month):
+def do_nox_inversion(month, calcbeta=True):
     '''
     month: int of month (e.g. 6 for June)
     
@@ -43,27 +43,32 @@ def do_nox_inversion(month):
     end_date = date(2019,month,lenmonth)
     datestr=f'{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}'
     
-    print('Calculating a new beta!', flush=True)
     # Open file created in monthly_beta() call
-    beta = beta_monthly(
-        start_date,
-        end_date,
-        datadir,
-        lok=0,
-        hik=toplev,
-        ltng=True,
-        concdir=base, # base case
-        cutdir=cut, # perturbed case
-        emisbase=emisdir,
-        emisperturb=None,
-        **{'hourly':False,
-           'cutfrac':0.15, # cutfrac for lnox=0.15
-           'slimit':False,#True,
-           #'s_lim':0.01,
-           'min_limit': 0.01,
-           'max_limit': 10
-          }
-    )
+    if calcbeta:
+        print('Calculating a new beta!', flush=True)
+        beta = beta_monthly(
+            start_date,
+            end_date,
+            datadir,
+            lok=0,
+            hik=toplev,
+            ltng=True,
+            concdir=base, # base case
+            cutdir=cut, # perturbed case
+            emisbase=emisdir,
+            emisperturb=None,
+            **{'hourly':False,
+               'cutfrac':0.15, # cutfrac for lnox=0.15
+               'slimit':False,#True,
+               #'s_lim':0.01,
+               'min_limit': 0.01,
+               'max_limit': 10
+              }
+        )
+    else:
+        betaf=xr.open_dataset(betafile)
+        betax=betaf['BETA'].values
+        beta=np.ma.masked_where(np.isnan(betax), betax)
 
     ##
     # Calc LNOX emissions update
@@ -148,4 +153,4 @@ def do_nox_inversion(month):
     outf.to_netcdf(path=outpath)
     print(f'Created file: {outpath}', flush=True)
 
-do_nox_inversion(month)
+do_nox_inversion(month, calcbeta=calcbeta)
