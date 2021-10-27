@@ -462,30 +462,32 @@ def tovcd_partial(x, dmet2d, dconc, lok, hik):
 
 
 # Plotting stuff below here
-def plot_hemi(a, title='hemi', cmap='viridis', cbar=True, show=True, save=False, retax=False,ca=None,**kwargs):
+def plot_hemi(a, title='hemi', cmap='viridis', cbar=True, show=True, save=False, retax=False,ca=None,**kwargs,pc_kwargs=None):
     
     if ca is not None:
         ax = plt.sca(ca)
     else:
         plt.close('all')
+    if pc_kwargs is None:
+        pc_kwargs={}
     lognorm = kwargs.get('lognorm',False)
     if lognorm:
-        plt.pcolormesh(a, norm=colors.LogNorm()) # set vmin, vmax manually
+        plt.pcolormesh(a, norm=colors.LogNorm(), **pc_kwargs) # set vmin, vmax manually
     else:
-        plt.pcolormesh(a)
+        plt.pcolormesh(a, **pc_kwargs)
     cno.draw()
     if cbar:
         cb = plt.colorbar()
+        if 'units' in kwargs:
+            cb.set_label(kwargs.get('units',None))
+        elif hasattr(a,'units'):
+            cb.set_label(a.units)
     ax=plt.gca()
     ax.set_aspect('equal')
     if 'lo' in kwargs:
         plt.clim(vmin=kwargs.get('lo',None))
     if 'hi' in kwargs:
         plt.clim(vmax=kwargs.get('hi',None))
-    if 'units' in kwargs:
-        cb.set_label(kwargs.get('units',None))
-    elif hasattr(a,'units'):
-        cb.set_label(a.units)
     if 'fname' in kwargs:
         fname = kwargs.get('fname',None)
     else:
