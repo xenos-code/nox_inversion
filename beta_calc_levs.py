@@ -462,7 +462,7 @@ def tovcd_partial(x, dmet2d, dconc, lok, hik):
 
 
 # Plotting stuff below here
-def plot_hemi(a, title='hemi', cmap='viridis', cbar=True, show=True, save=False, retax=False,ca=None,**kwargs,pc_kwargs=None):
+def plot_hemi(a, title='hemi', cmap='viridis', cbar=True, show=True, save=False, retax=False,ca=None,pc_kwargs=None,**kwargs,):
     
     if ca is not None:
         ax = plt.sca(ca)
