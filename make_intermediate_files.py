@@ -1,15 +1,19 @@
 # James East
 
 import sys
-sys.path.insert(0, '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/scripts/hemi')
+sys.path.append('.')
 from beta_calc_levs import *
 from datetime import date, datetime
+import os
 
 indirname = sys.argv[1]
 intoplev  = int(sys.argv[2])
 inoutname = sys.argv[3]
 basedir = sys.argv[4]
 yyyymm = sys.argv[5]
+
+mydir = os.path.abspath('.')
+myname = os.path.basename(__file__)
 
 #basedir = '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/'
 
@@ -48,7 +52,7 @@ def save_vcds(dirname, toplev, outname, yyyymm):
     dout.attrs['NVARS'] = np.int32(1)
     dout.attrs['VAR-LIST'] = 'NO2_VCD'
     dout.attrs['file_creation_date'] = date.today().strftime('%Y%m%d-%H:%M:%S')
-    dout.attrs['file_source_script'] = '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/scripts/hemi/make_intermediate_files.py'
+    dout.attrs['file_source_script'] = f'{mydir}/{myname}'
     dout.attrs['source_conc_files'] = files
 
     # save file

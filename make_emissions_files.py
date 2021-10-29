@@ -1,7 +1,7 @@
 # James East
 
 import sys
-sys.path.insert(0, '.')
+sys.path.append('.')
 from beta_calc_levs import emissions_sums
 from datetime import date, datetime, timedelta
 import xarray as xr

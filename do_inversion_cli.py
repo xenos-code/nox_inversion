@@ -4,10 +4,11 @@
 # Calculate beta and create files for scaling NOx emissions
 
 import sys
-sys.path.insert(0, '/work/ROMO/users/bhenders/HAQAST/NO2ASSIM/CMAQ/scripts/hemi')
+sys.path.append('.')
 from datetime import date, datetime
 from beta_calc_levs import *
 from calendar import monthrange
+import os
 
 # excessive number of sys args...
 outdir   = sys.argv[1] # output directory for figures and analysis file
@@ -21,6 +22,8 @@ toplev   = int(sys.argv[8])
 calcbeta = sys.argv[9].lower() == 'true' # true or false, case insensitive
 betafile = sys.argv[10] # file used for beta IF calcbeta=False
 
+mydir = os.path.abspath('.')
+myname = os.path.basename(__file__)
 
 def do_nox_inversion(month, calcbeta=False):
     '''
@@ -151,7 +154,7 @@ def do_nox_inversion(month, calcbeta=False):
     outpath = f'{outdir}/{gsirun}_{start_date.strftime("%Y%m")}_inversion_analysis.nc'
 
     outf.attrs['file_creation_date'] = datetime.today().strftime('%Y-%m-%d_%H:%M:%S')
-    outf.attrs['file_source_script'] = '/work/MOD3EVAL/jeast/NO2ASSIM/CMAQ/scripts/hemi/nox_inversion/do_inversion_lnox_cli.py'
+    outf.attrs['file_source_script'] = f'{mydir}/{myname}'
 
     outf.to_netcdf(path=outpath)
     print(f'Created file: {outpath}', flush=True)
