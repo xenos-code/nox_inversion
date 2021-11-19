@@ -1,6 +1,7 @@
 # James East
 
 import sys
+import os
 sys.path.append('.')
 from beta_calc_levs import emissions_sums
 from datetime import date, datetime, timedelta
@@ -52,7 +53,13 @@ for d in range(mlength):
     noxemisout.append(noxemis)
 
 emisbasef = f'{datadir}/noxemis_{emisdir}_{start_date.strftime("%Y%m%d")}_{end_date.strftime("%Y%m%d")}.nc'
-(xr.concat([xr.merge([earray]) for earray in noxemisout], dim='TSTEP')).to_netcdf(emisbasef)
+dout = xr.concat([xr.merge([earray]) for earray in noxemisout], dim='TSTEP')
+
+mypath = os.path.abspath(sys.argv[0])
+dout.attrs['file_creation_date'] = datetime.today().strftime('%Y-%m-%d_%H:%M:%S') 
+dout.attrs['file_source_script'] = f'{mypath}'
+
+dout.to_netcdf(emisbasef)
 
 
 
