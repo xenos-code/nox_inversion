@@ -439,26 +439,54 @@ def tovcd(x, dmet2d, dconc):
     return (x * dp).sum(dim='LAY', keepdims=True) * hPa_to_du * 2.69e16
 
 
-def tovcd_partial(x, dmet2d, dconc, lok, hik):
+def tovcd_partial(x, dmet, dconc, lok, hik, method='sigma'):
     '''
     x = array of 3D NO2
-    dmet2d = xarray metrco2d file
+    dmet = xarray metrco2d or metcro3d file
     dconc = xarray CONC file
     lok = int, index for bottom level used for partial column
     hik = int, index for top level used for partial column
     '''
-    # Calc VCD with surface file only
-    x = x[:,lok:hik,:,:]
-    pedges = (
-        (dmet2d.PRSFC.values - dconc.VGTOP) *
-        dconc.VGLVLS[None,:,None,None] + dconc.VGTOP
-    )
-    pedges = pedges[:,lok:hik+1,:,:]
-    dp = -np.diff(pedges, axis=1) / 100
-    hPa_to_du = (
-        10 * 1.3807e-23 * 6.022e23 / 0.02894 * 273.15 / 9.80665 / 101325.
-    )
-    return (x * dp).sum(dim='LAY', keepdims=True) * hPa_to_du * 2.69e16
+    if method == 'sigma':
+        # Calc VCD with surface file only
+        # dmet must be metcro2d
+        x = x[:,lok:hik,:,:]
+        pedges = (
+            (dmet.PRSFC.values - dconc.VGTOP) *
+            dconc.VGLVLS[None,:,None,None] + dconc.VGTOP
+        )
+        pedges = pedges[:,lok:hik+1,:,:]
+        dp = -np.diff(pedges, axis=1) / 100
+        hPa_to_du = (
+            10 * 1.3807e-23 * 6.022e23 / 0.02894 * 273.15 / 9.80665 / 101325.
+        )
+        return (x * dp).sum(dim='LAY', keepdims=True) * hPa_to_du * 2.69e16
+
+    elif method == 'density':
+        # Calc vcd with dry density
+        # in this case, dmet must be metcro3d file
+        Av = 6.0221409e23
+
+        dens = dmet['DENS'][:].values # kg/m3
+        zf = dmet['ZF'][:].values # m
+
+        dz = np.zeros(zf.shape)
+        dz[:,0,:,:] = zf[:,0,:,:]
+        dz[:,1:,:,:] = zf[:,1:,:,:] - zf[:,:-1,:,:]
+
+        MW = 0.0289628 # kg/mole
+        c = dens / MW # mole/m3
+
+        cbar = c * dz # mole/m2 air
+        cbar_i = x * cbar / 1e6 # mole/m2 no2
+
+        VCD_i_molem2 = cbar_i[:,levmin:levmax,:,:].sum(1, keepdims=True) # in mole/m2 no2 sum
+        #VCD_i_DU = VCD_i_molem2 * 6.0221367e23 / 2.69e20 # Dobson units
+        vcd = VCD_i_molem2 * Av * 1e-4 # molecules/cm2 no2
+        return vcd
+        
+    else:
+        sys.exit('No VCD method specified!')
 
 
 # Plotting stuff below here
