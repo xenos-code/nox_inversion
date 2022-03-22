@@ -4,6 +4,10 @@ import xarray as xr
 import numpy as np
 import sys
 from glob import glob
+try:
+    import palettable
+except ModuleNotFoundError:
+    pass
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from datetime import date, timedelta
